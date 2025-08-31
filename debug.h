@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <asm-generic/fcntl.h>
 
+#include "hashmap.h"
 #include "string.h"
 
 #define NL LOG("\n")
@@ -17,5 +18,9 @@ void LOGr(const char* txt, unsigned int n);
 void LOG(const char* txt);
 void LOGS(const String str);
 void LOGN(const long long number);
+void LOGp(const void* pointer);
+
+void LOGhashmap(struct hashmap_s *hashmap);
+void TODO();
 
 #endif

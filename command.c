@@ -21,7 +21,7 @@
 
 #define STR(txt) txt, strlen(txt)
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include "debug.h"
@@ -77,7 +77,20 @@ void encapsule_cmd(struct termios term, char** cmd) {
 
     close(slave_fd);
 
-    Config conf = read_config("keyexpand.conf");
+    const char* configDir = getenv("XDG_CONFIG_HOME");
+    if (configDir == NULL) {
+        configDir = getenv("HOME");
+        if (configDir == NULL) {
+            // TODO:
+            configDir = ".";
+        }
+    }
+
+    String config_path = newString(configDir);
+    appendS(config_path, "/.config/keyexpand.conf");
+    Config conf = read_config(config_path->content);
+
+    freeString(config_path);
 
     char buffer[256];
     int timeout = 10000;
@@ -91,7 +104,7 @@ void encapsule_cmd(struct termios term, char** cmd) {
 
     int status;
 
-    String replace = NULL;
+    Keybind replace = NULL;
     REPLACE_STATE replaceState = REPLACED;
 
     String input = newStringWithSize(256);
@@ -125,7 +138,12 @@ void encapsule_cmd(struct termios term, char** cmd) {
             
             for (int i = 0; i < n; i++) {
                 char c = buffer[i];
-                if (c < 27) {
+                if (c < 28) {
+#ifdef DEBUG
+                    if (c == 19) {
+                        LOGhashmap(&conf.keybinds);
+                    }
+#endif
                     replaceState = REPLACED;
                     cleanString(input);
                     continue;
@@ -141,7 +159,10 @@ void encapsule_cmd(struct termios term, char** cmd) {
                     case 127:
                         if (replaceState == REPLACE_PENDING) {
                             replaceState = NO_REPLACE;
-                            for (unsigned int i = 1; i < len(replace); i++) {
+                            for (unsigned int i = 0; i < replace->cursor; i++) {
+                                write(master_fd, STR("\x1b[C"));
+                            }
+                            for (unsigned int i = 1; i < len(replace->bind); i++) {
                                 write(master_fd, STR("\b"));
                             }
                             writeS(master_fd, input);
@@ -161,7 +182,7 @@ void encapsule_cmd(struct termios term, char** cmd) {
                     default:
                         if (replaceState == REPLACE_PENDING) {
                             replaceState = REPLACED;
-                            copyS(replace, input);
+                            copyS(replace->bind, input);
                         } 
                         pushS(input, buffer[i]);
                 }
@@ -179,11 +200,14 @@ void encapsule_cmd(struct termios term, char** cmd) {
                     for (int i = 0; i < len(input); i++) {
                         write(master_fd, STR("\b"));
                     }
-                    writeS(master_fd, replace);
+                    writeS(master_fd, replace->bind);
+                    for (int i = 0; i < replace->cursor; i++) {
+                        write(master_fd, STR("\x1b[D"));
+                    }
 #ifdef DEBUG
-                    LOG("REPLACE: ");
-                    LOGS(replace);
-                    NL;
+
+                    LOG("REPLACE: "); LOGS(replace->bind); NL;
+                    LOG("OFFSET: "); LOGN(replace->cursor); NL;
 #endif
                 }
             }

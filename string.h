@@ -20,9 +20,12 @@ String readAtDelimiter(int fd, char* del, bool incDel);
 String growS(String str, unsigned int grow);
 String pushS(String str, char c);
 
+String appendS(String str, const char* prefix);
 String copyS(String src, String dst);
 
 char popS(String str);
+long replaceFirst(String src, const char* pattern, const char* to, String *dst);
+String replaceAll(String src, const char* pattern, const char* to);
 
 unsigned int len(String str);
 void cleanString(String str);

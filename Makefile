@@ -1,7 +1,8 @@
-BIN ?= terminal_interceptor
+BIN		:= key_expand
+CONF	:= keyexpand.conf
 DEV ?= FALSE
 ifeq (${DEV}, TRUE)
-	CFLAGS =-fsanitize=address -Wall
+	CFLAGS =-fsanitize=address -Wall -DDEBUG -g
 else
 	CFLAGS =
 endif
@@ -9,14 +10,26 @@ endif
 SRC=$(wildcard *.c)
 OBJ = $(SRC:.c=.o)
 
-run: $(BIN)
-	./$(BIN)
+XDG_CONFIG_HOME ?= $(HOME)
 
 $(BIN): $(OBJ)
-	$(CC) $(OBJ) -o $@
+	$(CC) $(CFLAGS) $(OBJ) -o $@
+
+run: $(BIN)
+	./$(BIN)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+install: $(BIN)
+	cp $(BIN) $(PREFIX)/bin
+	mkdir -p $(XDG_CONFIG_HOME)/.config/
+	[ -f $(XDG_CONFIG_HOME)/.config/$(CONF) ] || \
+	cp $(CONF) $(XDG_CONFIG_HOME)/.config/
+
+uninstall:
+	rm $(PREFIX)/bin/$(BIN)
+	rm $(XDG_CONFIG_HOME)/.config/$(CONF)
+
 clean:
-	rm -rfv $(OBJ) $(BIN)
+	rm -rfv $(OBJ) $(BIN) log.txt
