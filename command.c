@@ -1,6 +1,6 @@
 #include "command.h"
 
-#include <asm-generic/fcntl.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pty.h>
 

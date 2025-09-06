@@ -1,9 +1,7 @@
 #include "config.h"
 #include "hashmap.h"
 #include "string.h"
-#include <asm-generic/fcntl.h>
-#include <asm-generic/poll.h>
-#include <linux/stat.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdio.h>
